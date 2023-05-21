@@ -440,7 +440,7 @@ start:
             
             invoke CloseHandle, fileHandle
 
-        cmp test_chave, 20
+        cmp test_chave, 21
         je nao_achou
         cmp vezes_acima_4, 10 ; verificar qual e a melhor constante para ser utilizada como criterio de quebra de chave 10 foi a melhor pelo que eu testei
         jle loop_quebra_chave
