@@ -29,7 +29,7 @@ includelib \masm32\lib\masm32.lib
 
 .data
     ;variavel string que fala quais opções o usuario tem para selecionar, no caso são 3 opções uma pra encryptar o programa uma pra decryptar e uma pra sair
-    menu db "1 - Encryptar",0dh,0ah,"2 - Decryptar",0dh,0ah,"3 - Sair",0dh,0ah,"4 - CryptoAnalise",0dh,0ah,"Escolha uma opcao: ",0
+    menu db "1 - Encryptar",0dh,0ah,"2 - Decryptar",0dh,0ah,"3 - CryptoAnalise",0dh,0ah,"4 - Sair",0dh,0ah,"Escolha uma opcao: ",0
     string_arquivo_encryptar db "Digite o nome do arquivo para ser encryptado: ",0
     string_arquivo_gerar db "Digite o nome do arquivo que vai ser gerado: ",0
     chave_encryptar db "Digite a chave: ",0
@@ -143,9 +143,9 @@ start:
     je encryptar
     cmp opcao, 2
     je decryptar
-    cmp opcao, 4
-    je cryptoanalise
     cmp opcao, 3
+    je cryptoanalise
+    cmp opcao, 4
     je sair
     jmp console
 
@@ -347,6 +347,8 @@ start:
         mov fileHandle, eax
         cmp eax, INVALID_HANDLE_VALUE
         je erro
+
+        jmp console
 
     sair:
         invoke ExitProcess, 0
