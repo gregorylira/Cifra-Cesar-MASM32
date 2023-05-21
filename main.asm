@@ -333,11 +333,11 @@ start:
 
         ; parte do codigo que vai tratar a string para remover o CR
         mov esi, offset inputString
-        proximo_dec:
+        proximo_cryptoanalise:
         mov al, [esi]
         inc esi
         cmp al, 13
-        jne proximo_dec
+        jne proximo_cryptoanalise
         dec esi
         xor al, al
         mov [esi], al
