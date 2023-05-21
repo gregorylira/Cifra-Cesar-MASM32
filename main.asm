@@ -60,6 +60,15 @@ includelib \masm32\lib\masm32.lib
     mensagem_decryptando db 0ah,"Decryptando",0ah, 0
     mensagem_decryptado db 0ah,"Decryptado",0ah, 0
 
+    ; variaveis para a cryptoanalise
+    mensagem_cryptoanalise db 0ah,"Cryptoanalise",0ah, 0
+    ; frequencia das letras em portugues
+    letra_a real4 0.1463
+    letra_e real4 0.1257
+    letra_i real4 0.0618
+    letra_o real4 0.1073
+    letra_s real4 0.0781
+    
 
 .code
 
@@ -81,7 +90,7 @@ func_encrypt:
         inc edi ; incrementa o contador de caracteres para passar para o próximo caractere.
         cmp edi, ecx ; Compara o contador de caracteres com o tamanho da string.
         jl encrypt_loop; Salta para "encrypt" se esi for menor que ecx (ainda há caracteres a serem processados).
-        add esi, 1; incrementa o contador de caracteres para passar para o próximo caractere.
+        ; add esi, 1; incrementa o contador de caracteres para passar para o próximo caractere.
 
     mov esp, ebp
     pop ebp
@@ -105,7 +114,7 @@ func_decrypt:
         inc edi; incrementa o contador de caracteres para passar para o próximo caractere.
         cmp edi, ecx ; Compara o contador de caracteres com o tamanho da string.
         jl decrypt_loop ; Salta para "decrypt" se esi for menor que ecx (ainda há caracteres a serem processados).
-        add esi, 1; incrementa o contador de caracteres para passar para o próximo caractere.
+        ; add esi, 1; incrementa o contador de caracteres para passar para o próximo caractere.
 
     mov esp, ebp
     pop ebp
