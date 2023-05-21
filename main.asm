@@ -7,7 +7,9 @@ include \masm32\include\kernel32.inc
 include \masm32\include\masm32.inc
 includelib \masm32\lib\kernel32.lib
 includelib \masm32\lib\masm32.lib
-
+include \masm32\macros\macros.asm
+include \masm32\include\msvcrt.inc
+includelib \masm32\lib\msvcrt.lib
 
 
 
@@ -60,14 +62,23 @@ includelib \masm32\lib\masm32.lib
     mensagem_decryptando db 0ah,"Decryptando",0ah, 0
     mensagem_decryptado db 0ah,"Decryptado",0ah, 0
 
+
+
+    debugador_mensagem  db 0ah,"debugador", 0
+
+
+
     ; variaveis para a cryptoanalise
     mensagem_cryptoanalise db 0ah,"Cryptoanalise",0ah, 0
     ; frequencia das letras em portugues
-    letra_a real4 0.1463
-    letra_e real4 0.1257
-    letra_i real4 0.0618
-    letra_o real4 0.1073
-    letra_s real4 0.0781
+    vezes_acima_4 dd 0
+
+    media_vogais dd 0
+    num_vogais dd 0
+
+    total_caracteres dd 0
+
+    test_chave dd 0
     
 
 .code
@@ -351,13 +362,97 @@ start:
         xor al, al
         mov [esi], al
 
-        ; abre o arquivo que vai ser decryptado, se não conseguir ele vai para o label erro.
-        invoke CreateFile, addr inputString, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL
-        mov fileHandle, eax
-        cmp eax, INVALID_HANDLE_VALUE
-        je erro
+
+        loop_quebra_chave:
+            ; abre o arquivo que vai ser decryptado, se não conseguir ele vai para o label erro.
+            mov vezes_acima_4, 0
+            inc test_chave
+
+            invoke CreateFile, addr inputString, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL
+            mov fileHandle, eax
+            cmp eax, INVALID_HANDLE_VALUE
+            je erro
+
+            ;ler o arquivo e contar as letras
+            
+            invoke ReadFile, fileHandle, addr fileBuffer, 512, addr readCount, NULL
+
+            push readCount
+            push test_chave
+            push offset fileBuffer
+            call func_decrypt
+
+            
+            xor esi, esi
+            xor edi, edi
+            mov esi, offset fileBuffer
+            mov edi, 0
+            mov eax, readCount
+            add total_caracteres, eax
+            loop_cryptoanalise_contador:
+                mov al, [esi + edi]
+                cmp al, 97
+                je e_vogal
+                cmp al, 101
+                je e_vogal
+                cmp al, 105
+                je e_vogal
+                cmp al, 111
+                je e_vogal
+                cmp al, 117
+                je e_vogal
+                cmp al, 125
+                jmp loop_cryptoanalise_fim
+                
+                ; faz a contagem para analisar a frequencia das letras
+                e_vogal:
+                    inc num_vogais
+
+                    jmp loop_cryptoanalise_fim
+                
+                loop_cryptoanalise_fim:
+                    push edi
+                    cmp edi, 0
+                    je nao_igual
+                    mov eax, edi
+                    push edi
+                    xor edx, edx
+                    mov ecx, 10
+                    div ecx
+                    cmp edx, 0
+                    jne nao_igual
+                    mov eax, num_vogais
+                    mov num_vogais, 0
+
+
+                    cmp eax, 4
+                    jl nao_igual
+                    inc vezes_acima_4
+
+                    
+                    nao_igual:
+                    pop edi
+
+                    inc edi
+                    cmp edi, readCount
+                    jne loop_cryptoanalise_contador
+
+            
+            invoke CloseHandle, fileHandle
+
+        cmp test_chave, 20
+        je nao_achou
+        cmp vezes_acima_4, 10 ; verificar qual e a melhor constante para ser utilizada como criterio de quebra de chave 10 foi a melhor pelo que eu testei
+        jle loop_quebra_chave
+
+        printf("sequencia vogais: %d\n", vezes_acima_4)
+        printf("chave encontrada: %d\n", test_chave)
 
         jmp console
+
+        nao_achou:
+            printf("nao encontrou a chave\n")
+            jmp console
 
     sair:
         invoke ExitProcess, 0
