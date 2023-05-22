@@ -79,7 +79,15 @@ includelib \masm32\lib\msvcrt.lib
     total_caracteres dd 0
 
     test_chave dd 0
+    chave_convert db 50 dup(0)
+    mensagem_chave db 0ah,"Chave: ", 0
     
+    mensagem_acima_4 db 0ah,"vezes que apareceu 4 vogais a cada 10 caracter: ", 0
+    vezes_acima_4_convert db 50 dup(0)
+    quebra_linha db 0ah, 0
+
+    nao_encontrou_chave db 0ah,"Nao encontrou a chave", 0
+
 
 .code
 
@@ -362,6 +370,8 @@ start:
         xor al, al
         mov [esi], al
 
+        mov test_chave, 0
+
 
         loop_quebra_chave:
             ; abre o arquivo que vai ser decryptado, se não conseguir ele vai para o label erro.
@@ -438,20 +448,31 @@ start:
                     jne loop_cryptoanalise_contador
 
             
-            invoke CloseHandle, fileHandle
-
+            
+        invoke CloseHandle, fileHandle
+        
         cmp test_chave, 21
         je nao_achou
         cmp vezes_acima_4, 10 ; verificar qual e a melhor constante para ser utilizada como criterio de quebra de chave 10 foi a melhor pelo que eu testei
         jle loop_quebra_chave
 
-        printf("sequencia vogais: %d\n", vezes_acima_4)
-        printf("chave encontrada: %d\n", test_chave)
+
+        invoke WriteConsole, outputHandle, addr mensagem_acima_4, sizeof mensagem_acima_4, addr console_count, NULL
+        invoke dwtoa, vezes_acima_4, addr vezes_acima_4_convert
+        invoke WriteConsole, outputHandle, addr vezes_acima_4_convert, sizeof vezes_acima_4_convert, addr console_count, NULL
+
+        invoke WriteConsole, outputHandle, addr quebra_linha, sizeof quebra_linha, addr console_count, NULL
+
+        invoke WriteConsole, outputHandle, addr mensagem_chave, sizeof mensagem_chave, addr console_count, NULL
+        invoke dwtoa, test_chave, addr chave_convert
+        invoke WriteConsole, outputHandle, addr chave_convert, sizeof chave_convert, addr console_count, NULL
+
+        invoke WriteConsole, outputHandle, addr quebra_linha, sizeof quebra_linha, addr console_count, NULL
 
         jmp console
 
         nao_achou:
-            printf("nao encontrou a chave\n")
+            invoke WriteConsole, outputHandle, addr nao_encontrou_chave, sizeof nao_encontrou_chave, addr console_count, NULL
             jmp console
 
     sair:
