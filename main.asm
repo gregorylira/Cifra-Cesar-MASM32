@@ -109,7 +109,6 @@ func_encrypt:
         inc edi ; incrementa o contador de caracteres para passar para o próximo caractere.
         cmp edi, ecx ; Compara o contador de caracteres com o tamanho da string.
         jl encrypt_loop; Salta para "encrypt" se esi for menor que ecx (ainda há caracteres a serem processados).
-        ; add esi, 1; incrementa o contador de caracteres para passar para o próximo caractere.
 
     mov esp, ebp
     pop ebp
@@ -133,7 +132,6 @@ func_decrypt:
         inc edi; incrementa o contador de caracteres para passar para o próximo caractere.
         cmp edi, ecx ; Compara o contador de caracteres com o tamanho da string.
         jl decrypt_loop ; Salta para "decrypt" se esi for menor que ecx (ainda há caracteres a serem processados).
-        ; add esi, 1; incrementa o contador de caracteres para passar para o próximo caractere.
 
     mov esp, ebp
     pop ebp
@@ -219,7 +217,6 @@ start:
         mov fileHandle_file_enc, eax
         cmp eax, INVALID_HANDLE_VALUE
         je erro
-        ; invoke WriteFile, fileHandle_file_enc, addr fileBuffer, readCount, addr writeCount, NULL
 
 
         ; solicita ao usuario a chave de encryptação
@@ -256,7 +253,7 @@ start:
             call func_encrypt
 
             invoke WriteFile, fileHandle_file_enc, addr fileBuffer, readCount, addr writeCount, NULL
-
+            ; quebra o loop caso o readCount seja 0, ou seja, chegou no final do arquivo
             cmp readCount, 0
             jne loop_encrypt
             invoke WriteConsole , outputHandle, addr mensagem_fim_processo, sizeof mensagem_fim_processo, addr console_count, NULL
@@ -315,7 +312,6 @@ start:
         mov fileHandle_file_dec, eax
         cmp eax, INVALID_HANDLE_VALUE
         je erro
-        ; invoke WriteFile, fileHandle_file_enc, addr fileBuffer, readCount, addr writeCount, NULL
 
         ; solicita ao usuario a chave de decryptação
         invoke WriteConsole, outputHandle, addr chave_decryptar, sizeof chave_decryptar, addr console_count, NULL
@@ -345,7 +341,7 @@ start:
                 call func_decrypt
     
                 invoke WriteFile, fileHandle_file_dec, addr fileBuffer, readCount, addr writeCount, NULL
-    
+                ; quebra o loop caso o readCount seja 0, ou seja, chegou no final do arquivo
                 cmp readCount, 0
                 jne loop_decrypt
                 invoke WriteConsole , outputHandle, addr mensagem_fim_processo, sizeof mensagem_fim_processo, addr console_count, NULL
@@ -354,6 +350,8 @@ start:
         invoke CloseHandle, fileHandle
         invoke CloseHandle, fileHandle_file_dec
         jmp console
+
+
     cryptoanalise:
         ; solicita ao usuario o nome do arquivo que vai ser decryptado
         invoke WriteConsole, outputHandle, addr string_arquivo_cryptoanalise, sizeof string_arquivo_cryptoanalise, addr console_count, NULL
@@ -372,7 +370,7 @@ start:
 
         mov test_chave, 0
 
-
+        ; loop que vai testar todas as chaves possiveis especificadas no trabalho
         loop_quebra_chave:
             ; abre o arquivo que vai ser decryptado, se não conseguir ele vai para o label erro.
             mov vezes_acima_4, 0
@@ -384,7 +382,7 @@ start:
             je erro
 
             ;ler o arquivo e contar as letras
-            
+            ; testa o arquivo com a chave atual
             invoke ReadFile, fileHandle, addr fileBuffer, 512, addr readCount, NULL
 
             push readCount
@@ -392,7 +390,7 @@ start:
             push offset fileBuffer
             call func_decrypt
 
-            
+            ; limpa as variaveis para a cryptoanalise
             xor esi, esi
             xor edi, edi
             mov esi, offset fileBuffer
@@ -400,7 +398,7 @@ start:
             mov eax, readCount
             add total_caracteres, eax
             loop_cryptoanalise_contador:
-                mov al, [esi + edi]
+                mov al, [esi + edi] ; pega o caracter atual e faz as verificações e desvios condicionais
                 cmp al, 97
                 je e_vogal
                 cmp al, 101
@@ -414,28 +412,28 @@ start:
                 cmp al, 125
                 jmp loop_cryptoanalise_fim
                 
-                ; faz a contagem para analisar a frequencia das letras
+                ; contador para ver quantas vogais apareceram
                 e_vogal:
                     inc num_vogais
 
                     jmp loop_cryptoanalise_fim
                 
                 loop_cryptoanalise_fim:
-                    push edi
-                    cmp edi, 0
+                    push edi; salva o valor de edi para poder voltar para o valor original
+                    cmp edi, 0; caso onde o valor de edi é 0, pula direto pro nao_igual para não dar erro (resto da divisão por 10 igual a 0)
                     je nao_igual
                     mov eax, edi
                     push edi
                     xor edx, edx
                     mov ecx, 10
-                    div ecx
-                    cmp edx, 0
+                    div ecx ; divide o valor de edi por 10 para ver se o resto é 0 (no caso utilizando a teoria que a cada 10 caracteres tem que ter 4 vogais para ser a chave correta)
+                    cmp edx, 0; verifica se o resto da divisão é 0
                     jne nao_igual
-                    mov eax, num_vogais
-                    mov num_vogais, 0
+                    mov eax, num_vogais 
+                    mov num_vogais, 0 ; zera o contador de vogais
 
 
-                    cmp eax, 4
+                    cmp eax, 4 ; verifica se o numero de vogais é maior que 4
                     jl nao_igual
                     inc vezes_acima_4
 
@@ -451,7 +449,7 @@ start:
             
         invoke CloseHandle, fileHandle
         
-        cmp test_chave, 21
+        cmp test_chave, 21 ; verifica se a chave testada é maior que 21, se for ele vai para o label nao_achou
         je nao_achou
         cmp vezes_acima_4, 10 ; verificar qual e a melhor constante para ser utilizada como criterio de quebra de chave 10 foi a melhor pelo que eu testei
         jle loop_quebra_chave
