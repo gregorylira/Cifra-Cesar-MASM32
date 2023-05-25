@@ -2,6 +2,8 @@
 .model flat,stdcall
 option casemap:none
 
+; Gregory Filipe Lira da Silva
+
 include \masm32\include\windows.inc
 include \masm32\include\kernel32.inc
 include \masm32\include\masm32.inc
@@ -19,11 +21,9 @@ includelib \masm32\lib\msvcrt.lib
     readCount dd ?
 
     fileHandle_file_enc dd ?
-    fileBuffer_file_enc db 512 dup(?)
     writeCount dd ?
 
     fileHandle_file_dec dd ?
-    fileBuffer_file_dec db 512 dup(?)
     readCount_file_dec dd ?
 
 
@@ -38,47 +38,35 @@ includelib \masm32\lib\msvcrt.lib
 
     string_arquivo_decryptar db "Digite o nome do arquivo para ser decryptado: ",0
     string_arquivo_gerar_decryptado db "Digite o nome do arquivo que vai ser gerado: ",0
-    chave_decryptar db "Digite a chave: ",0
+    chave_decryptar db "Digite a chave (entre 1-20): ",0
 
     string_arquivo_cryptoanalise db "Digite o nome do arquivo para a cryptoanalise: ",0
 
-    erro_arquivo db "Erro ao abrir o arquivo",0
+    erro_arquivo db "Erro ao abrir o arquivo",0ah,0
 
 
     inputString db 50 dup(0)
     inputGenerate db 50 dup(0)
-    outputString db 50 dup(0)
     inputHandle dd 0 ; Variavel para armazenar o handle de entrada
     outputHandle dd 0 ; Variavel para armazenar o handle de saida
     console_count dd 0 ; Variavel para armazenar caracteres lidos/escritos na console
-    tamanho_string dd 0 ; Variavel para armazenar tamanho de string terminada em 0
     opcao dd 0 ; Variavel para armazenar a opcao escolhida pelo usuario
 
     chave_enc dd 0
 
     mensagem_fim_processo db 0ah,"fim do processo",0ah, 0
     mensagem_encryptando db 0ah,"Encryptando",0ah, 0
-    mensagem_encryptado db 0ah,"Encryptado",0ah, 0
     mensagem_decryptando db 0ah,"Decryptando",0ah, 0
-    mensagem_decryptado db 0ah,"Decryptado",0ah, 0
-
-
-
-    debugador_mensagem  db 0ah,"debugador", 0
-
-
 
     ; variaveis para a cryptoanalise
-    mensagem_cryptoanalise db 0ah,"Cryptoanalise",0ah, 0
     ; frequencia das letras em portugues
-    vezes_acima_4 dd 0
+    vezes_acima_4 dd 0 ; variavel que vai contar quantas vezes apareceu 4 vogais a cada 10 caracteres
 
-    media_vogais dd 0
-    num_vogais dd 0
+    num_vogais dd 0 ; variavel que vai contar quantas vogais apareceram
 
-    total_caracteres dd 0
+    total_caracteres dd 0 ; variavel que vai contar o total de caracteres do arquivo
 
-    test_chave dd 0
+    test_chave dd 0 ; variavel que vai testar todas as chaves possiveis
     chave_convert db 50 dup(0)
     mensagem_chave db 0ah,"Chave: ", 0
     
@@ -86,7 +74,7 @@ includelib \masm32\lib\msvcrt.lib
     vezes_acima_4_convert db 50 dup(0)
     quebra_linha db 0ah, 0
 
-    nao_encontrou_chave db 0ah,"Nao encontrou a chave", 0
+    nao_encontrou_chave db 0ah,"Nao encontrou a chave",0ah, 0
 
 
 .code
